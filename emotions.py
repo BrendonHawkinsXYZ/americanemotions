@@ -21,22 +21,28 @@ daily_trends['Date'] = datetime.now().strftime('%Y-%m-%d')
 daily_trends.rename(columns={search_term_column: 'terms'}, inplace=True)
 
 # OpenAI API key
-openai.api_key = "Yours here"
+openai.api_key = "yours here"
 
 # Function to infer emotion and color from search term using OpenAI API
 def infer_emotion_and_color(term):
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o",
         messages=[
-            {"role": "system", "content": "You are an assistant that analyzes search terms and assigns emotions along with RGB colors. Provide RGB as three separate values."},
-            {"role": "user", "content": f"Analyze the emotion of the following search term: '{term}'. Provide a two word response: an emotion and a color. Your response should be: Emotion: , Color:."}
+            {"role": "system", "content": "You are an assistant that analyzes search terms to assign emotions and corresponding RGB colors. Aim to use a diverse emotional vocabulary and a broad color palette. Provide RGB values as three separate numbers."},
+            {"role": "user", "content": f"Analyze the emotion of the following search term: '{term}'. Provide a response with an emotion and a corresponding color in this format: Emotion: <emotion>, Color: RGB(<red>, <green>, <blue>)."}
         ]
     )
+
     text = response.choices[0].message['content']
     try:
-        emotion_match = re.search(r"emotion: ([a-zA-Z ]+)", text)
+        # Adjusted to match the exact format including the trailing punctuation
+        emotion_match = re.search(r"Emotion: ([a-zA-Z ]+),", text)
         color_match = re.findall(r'\d+', text)
-        emotion = emotion_match.group(1).lower() if emotion_match else ""
+
+        # Extract emotion
+        emotion = emotion_match.group(1).strip().lower() if emotion_match else "unknown"
+
+        # Validate and extract RGB color
         if len(color_match) == 3 and all(0 <= int(x) <= 255 for x in color_match):
             color_rgb = tuple(int(x) for x in color_match)
         else:
@@ -48,13 +54,17 @@ def infer_emotion_and_color(term):
 
     return text, emotion, color_rgb
 
-# Process terms and extract data
+# Example usage:
+# Assume 'response' is the output from the model
+# daily_trends['terms'] is a list of search terms you are processing
 response_data = [infer_emotion_and_color(term) for term in daily_trends['terms']]
 responses, emotions, colors = zip(*response_data)
 
+# Attach extracted data back to your daily trends DataFrame or structure
 daily_trends['Response'] = responses
 daily_trends['Emotion'] = emotions
 daily_trends['Color'] = colors
+
 
 # File path
 file_path = 'daily_trending_searches_new.csv'
@@ -73,8 +83,8 @@ else:
 
 # Function to create a blended gradient map in portrait orientation
 def create_gradient_map(colors):
-    width = 400  # Width is now the shorter side
-    height = 500  # Height is the longer side, making the image portrait
+    width = 4000  # Width is now the shorter side
+    height = 5000  # Height is the longer side, making the image portrait
     gradient = Image.new('RGB', (width, height))
     draw = ImageDraw.Draw(gradient)
 
