@@ -14,8 +14,6 @@ To run this project, ensure you have the following dependencies installed:
 
 •	Python (>= 3.6)
 
-•	[Pytrends](https://github.com/GeneralMills/pytrends)
-
 •	[Pandas](https://github.com/pandas-dev/pandas)
 
 •	[OpenAI's GPT](https://github.com/openai/openai-python)
